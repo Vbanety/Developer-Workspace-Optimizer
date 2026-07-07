@@ -1,0 +1,4 @@
+/devopt
+/dist/
+*.test
+.claude
