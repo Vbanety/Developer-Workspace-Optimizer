@@ -21,10 +21,23 @@ import (
 // version is set at release build time; "dev" during local builds.
 var version = "0.1.0-dev"
 
-// stubModuleNames lists the v0.1 modules not implemented yet — Detect works,
-// Calculate/Clean report core.ErrNotImplemented. See internal/modules/linux/stub.go.
-var stubModuleNames = []string{
-	"npm", "pnpm", "gradle", "composer", "playwright", "puppeteer", "apt", "trash",
+// linuxModules lists every v0.1 module: name and whether it's safe to clean
+// without extra confirmation (see .claude/contexts/safety.md). apt lives at
+// a system path (/var/cache/apt/archives) and needs root to remove — never
+// mark it safe, even though mechanically it's the same DirCache shape.
+var linuxModules = []struct {
+	name string
+	safe bool
+}{
+	{"yarn", true},
+	{"npm", true},
+	{"pnpm", true},
+	{"gradle", true},
+	{"composer", true},
+	{"playwright", true},
+	{"puppeteer", true},
+	{"trash", true},
+	{"apt", false},
 }
 
 func main() {
@@ -63,9 +76,8 @@ func buildRegistry() (*core.Registry, error) {
 	}
 
 	reg := core.NewRegistry()
-	reg.Register(linux.NewYarn(rules.Paths["yarn"]))
-	for _, name := range stubModuleNames {
-		reg.Register(linux.NewStub(name, rules.Paths[name]))
+	for _, m := range linuxModules {
+		reg.Register(linux.NewDirCache(m.name, rules.Paths[m.name], m.safe))
 	}
 	return reg, nil
 }

@@ -6,12 +6,9 @@ Não é "mais um cache cleaner": o diferencial é transparência. Antes de apaga
 
 ## Status
 
-**v0.1 — em andamento.** Linux apenas. Windows e macOS são fases futuras (ver [roadmap](.claude/contexts/roadmap.md)).
+**v0.1 — completo.** Linux apenas. Windows e macOS são fases futuras (ver [roadmap](.claude/contexts/roadmap.md)).
 
-| Módulo | Status |
-|--------|--------|
-| yarn | implementado |
-| npm, pnpm, gradle, composer, playwright, puppeteer, apt, trash | detecção real, limpeza ainda não implementada |
+Módulos: `yarn`, `npm`, `pnpm`, `gradle`, `composer`, `playwright`, `puppeteer`, `trash` (seguros, sem confirmação extra) e `apt` (path de sistema — normalmente exige `sudo` pra remover de verdade, sempre confirma).
 
 ## Uso
 

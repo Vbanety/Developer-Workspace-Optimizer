@@ -15,10 +15,10 @@ func writeFixtureFile(t *testing.T, dir, name string, size int) {
 	}
 }
 
-func TestYarnDetect(t *testing.T) {
+func TestDirCacheDetect(t *testing.T) {
 	dir := t.TempDir()
-	y := NewYarn(filepath.Join(dir, "missing"))
-	found, err := y.Detect()
+	c := NewDirCache("yarn", filepath.Join(dir, "missing"), true)
+	found, err := c.Detect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -26,8 +26,8 @@ func TestYarnDetect(t *testing.T) {
 		t.Fatal("expected Detect to report false for a missing path")
 	}
 
-	y2 := NewYarn(dir)
-	found, err = y2.Detect()
+	c2 := NewDirCache("yarn", dir, true)
+	found, err = c2.Detect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -36,13 +36,13 @@ func TestYarnDetect(t *testing.T) {
 	}
 }
 
-func TestYarnCalculateSumsFileSizes(t *testing.T) {
+func TestDirCacheCalculateSumsFileSizes(t *testing.T) {
 	dir := t.TempDir()
 	writeFixtureFile(t, dir, "a.bin", 1000)
 	writeFixtureFile(t, dir, "b.bin", 2000)
 
-	y := NewYarn(dir)
-	finding, err := y.Calculate()
+	c := NewDirCache("yarn", dir, true)
+	finding, err := c.Calculate()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,7 +54,7 @@ func TestYarnCalculateSumsFileSizes(t *testing.T) {
 	}
 }
 
-func TestYarnCleanDryRunDoesNotRemove(t *testing.T) {
+func TestDirCacheCleanDryRunDoesNotRemove(t *testing.T) {
 	orig := core.DefaultMinCleanBytes
 	core.DefaultMinCleanBytes = 0
 	defer func() { core.DefaultMinCleanBytes = orig }()
@@ -62,8 +62,8 @@ func TestYarnCleanDryRunDoesNotRemove(t *testing.T) {
 	dir := t.TempDir()
 	writeFixtureFile(t, dir, "a.bin", 1000)
 
-	y := NewYarn(dir)
-	result, err := y.Clean(true)
+	c := NewDirCache("yarn", dir, true)
+	result, err := c.Clean(true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -78,7 +78,7 @@ func TestYarnCleanDryRunDoesNotRemove(t *testing.T) {
 	}
 }
 
-func TestYarnCleanRemovesContent(t *testing.T) {
+func TestDirCacheCleanRemovesContent(t *testing.T) {
 	orig := core.DefaultMinCleanBytes
 	core.DefaultMinCleanBytes = 0
 	defer func() { core.DefaultMinCleanBytes = orig }()
@@ -86,8 +86,8 @@ func TestYarnCleanRemovesContent(t *testing.T) {
 	dir := t.TempDir()
 	writeFixtureFile(t, dir, "a.bin", 1000)
 
-	y := NewYarn(dir)
-	result, err := y.Clean(false)
+	c := NewDirCache("yarn", dir, true)
+	result, err := c.Clean(false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -99,12 +99,12 @@ func TestYarnCleanRemovesContent(t *testing.T) {
 	}
 }
 
-func TestYarnCleanSkipsBelowThreshold(t *testing.T) {
+func TestDirCacheCleanSkipsBelowThreshold(t *testing.T) {
 	dir := t.TempDir()
 	writeFixtureFile(t, dir, "a.bin", 1000) // well below default 200MB threshold
 
-	y := NewYarn(dir)
-	result, err := y.Clean(false)
+	c := NewDirCache("yarn", dir, true)
+	result, err := c.Clean(false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -113,5 +113,44 @@ func TestYarnCleanSkipsBelowThreshold(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(dir, "a.bin")); err != nil {
 		t.Fatalf("expected file to still exist when skipped, stat error: %v", err)
+	}
+}
+
+func TestDirCacheCalculateSkipsUnreadableSubdir(t *testing.T) {
+	if os.Geteuid() == 0 {
+		t.Skip("root ignores permission bits, can't exercise this case")
+	}
+
+	dir := t.TempDir()
+	writeFixtureFile(t, dir, "readable.bin", 1000)
+
+	blocked := filepath.Join(dir, "partial")
+	if err := os.Mkdir(blocked, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writeFixtureFile(t, blocked, "inside.bin", 5000)
+	if err := os.Chmod(blocked, 0o000); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Chmod(blocked, 0o755) // let t.TempDir() clean up afterward
+
+	c := NewDirCache("apt", dir, false)
+	finding, err := c.Calculate()
+	if err != nil {
+		t.Fatalf("expected unreadable subdir to be skipped, not fail the scan: %v", err)
+	}
+	if finding.SizeBytes != 1000 {
+		t.Fatalf("expected only the readable file's 1000 bytes, got %d", finding.SizeBytes)
+	}
+}
+
+func TestDirCacheGuardBlocksNeverDeletePath(t *testing.T) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	c := NewDirCache("docs", filepath.Join(home, "Documents"), true)
+	if _, err := c.Clean(true); err == nil {
+		t.Fatal("expected Clean to be rejected by the never-delete guard")
 	}
 }
