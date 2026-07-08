@@ -6,6 +6,21 @@ CLI que escaneia caches de ferramentas de desenvolvimento (npm/yarn/Docker/Gradl
 
 Não é "mais um cache cleaner": o diferencial é transparência. Antes de apagar qualquer coisa, mostra o que é, quanto ocupa, e por que é seguro remover.
 
+## Por que existe
+
+Começou do jeito clássico: disco perigosamente cheio, sem ideia de onde foi parar o espaço. A solução óbvia — um script shell encadeando `rm -rf` em algumas pastas de cache — parecia a ferramenta errada pro trabalho. Um path errado, um volume Docker ativo pego no meio, e um script `rm -rf` não limpa a máquina, quebra ela.
+
+Então o pedido de verdade nunca foi "apaga meu cache". Foram umas perguntas que nenhuma ferramenta existente respondia bem:
+
+- O que está consumindo meu SSD de verdade?
+- O que é seguro apagar, e o que vai quebrar meu ambiente se eu mexer?
+- Quanto eu realmente vou recuperar?
+- Vale a pena limpar?
+
+Olhando ao redor, a maioria das ferramentas de limpeza de cache é boa na parte de "limpar" e fraca em tudo antes disso — não se explicam, não distinguem artefato de build órfão de trabalho ativo, e raramente consideram como ambiente de dev moderno realmente é: containers Docker, cache de IDE (Cursor/VS Code), toolchains de linguagem, perfis de browser, tudo empilhado.
+
+O devopt nasce em torno da parte que faltava: **escanear e explicar antes, apagar só o que é comprovadamente seguro, e nunca tocar em projeto, banco de dados ou container rodando.** Recuperar espaço em disco não devia significar apostar no seu ambiente de dev.
+
 ## Status
 
 **v0.1, v0.2 e v0.3 — completos.** Linux apenas. Windows e macOS são fases futuras (ver [roadmap](.claude/contexts/roadmap.md)).
