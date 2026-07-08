@@ -6,13 +6,15 @@ Não é "mais um cache cleaner": o diferencial é transparência. Antes de apaga
 
 ## Status
 
-**v0.1 — completo.** **v0.2 — parcial** (Docker/Cursor/VS Code prontos; Snap e menu interativo pendentes). Linux apenas. Windows e macOS são fases futuras (ver [roadmap](.claude/contexts/roadmap.md)).
+**v0.1 e v0.2 — completos.** Linux apenas. Windows e macOS são fases futuras (ver [roadmap](.claude/contexts/roadmap.md)).
 
-Módulos: `yarn`, `npm`, `pnpm`, `gradle`, `composer`, `playwright`, `puppeteer`, `trash`, `cursor`, `vscode` (seguros, sem confirmação extra); `apt` (path de sistema — normalmente exige `sudo` pra remover de verdade) e `docker` (containers/imagens — nunca `Safe()`, sempre confirma; nunca mexe em volumes).
+Módulos: `yarn`, `npm`, `pnpm`, `gradle`, `composer`, `playwright`, `puppeteer`, `trash`, `cursor`, `vscode` (seguros, sem confirmação extra); `apt` (path de sistema — normalmente exige `sudo` pra remover de verdade), `docker` (containers/imagens — nunca `Safe()`, sempre confirma; nunca mexe em volumes) e `snap` (revisões desabilitadas — nunca `Safe()`, remoção exige root).
 
 ## Uso
 
 ```sh
+go run ./cmd/devopt              # menu interativo (scan → limpeza segura/profunda/escolher módulos/relatório)
+
 go run ./cmd/devopt report              # só escaneia, nunca apaga nada
 go run ./cmd/devopt report --json       # saída em JSON
 

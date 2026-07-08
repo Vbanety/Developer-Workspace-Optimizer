@@ -1,7 +1,7 @@
-// Package report renders scan/clean results as the terminal table described
-// in the original design doc (checkmarks, dotted alignment, total
-// recoverable). Deliberately decoupled from internal/core — it only knows
-// about Row, so cmd/devopt wires core.Finding into report.Row.
+// Package report scans modules and renders results as the terminal table
+// described in the original design doc (checkmarks, dotted alignment, total
+// recoverable). Shared by cmd/devopt's CLI commands and internal/tui so
+// neither has to re-implement the scan loop.
 package report
 
 import (
@@ -9,6 +9,8 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+
+	"github.com/vinidev/devopt/internal/core"
 )
 
 var (
@@ -81,4 +83,30 @@ func HumanSize(bytes int64) string {
 		exp++
 	}
 	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
+}
+
+// Scan runs Detect+Calculate across every registered module, turning each
+// into a Row. Never touches disk. Shared by cmd/devopt (report/clean
+// commands) and internal/tui so the scan loop isn't duplicated.
+func Scan(reg *core.Registry) []Row {
+	var rows []Row
+	for _, m := range reg.All() {
+		found, err := m.Detect()
+		if err != nil || !found {
+			continue
+		}
+
+		finding, err := m.Calculate()
+		switch {
+		case err == core.ErrNotImplemented:
+			rows = append(rows, Row{Module: m.Name(), NotImpl: true})
+		case err != nil:
+			rows = append(rows, Row{Module: m.Name(), SkipReason: "erro: " + err.Error()})
+		case core.ShouldSkipSmall(finding.SizeBytes):
+			rows = append(rows, Row{Module: m.Name(), SkipReason: "abaixo do limiar de 200 MB"})
+		default:
+			rows = append(rows, Row{Module: m.Name(), SizeBytes: finding.SizeBytes})
+		}
+	}
+	return rows
 }

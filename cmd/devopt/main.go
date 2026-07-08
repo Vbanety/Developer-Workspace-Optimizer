@@ -16,6 +16,7 @@ import (
 	"github.com/vinidev/devopt/internal/core"
 	"github.com/vinidev/devopt/internal/modules/linux"
 	"github.com/vinidev/devopt/internal/report"
+	"github.com/vinidev/devopt/internal/tui"
 )
 
 // version is set at release build time; "dev" during local builds.
@@ -44,6 +45,22 @@ func main() {
 	root := &cobra.Command{
 		Use:   "devopt",
 		Short: "Developer Workspace Optimizer — escaneia e limpa caches de dev com segurança",
+		// Bare invocation (no subcommand) launches the interactive menu.
+		// `report`/`clean` remain the scriptable, non-interactive path.
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			reg, err := buildRegistry()
+			if err != nil {
+				return err
+			}
+			if err := tui.Run(reg); err != nil {
+				return fmt.Errorf(
+					"menu interativo indisponível (%w) — sem terminal interativo? use 'devopt report' ou 'devopt clean'",
+					err,
+				)
+			}
+			return nil
+		},
+		SilenceUsage: true, // runtime errors here aren't a CLI-usage mistake — don't dump the flag/command list over them
 	}
 	root.AddCommand(newReportCmd(), newCleanCmd(), newVersionCmd())
 
@@ -83,6 +100,7 @@ func buildRegistry() (*core.Registry, error) {
 	// Bespoke modules that aren't a plain cache directory (see
 	// .claude/contexts/architecture.md for why each needs its own type).
 	reg.Register(linux.NewDocker())
+	reg.Register(linux.NewSnap())
 	reg.Register(linux.NewMultiDirCache("cursor", rules.Paths["cursor"], linux.ElectronCacheSubdirs, true))
 	reg.Register(linux.NewMultiDirCache("vscode", rules.Paths["vscode"], linux.ElectronCacheSubdirs, true))
 
@@ -99,7 +117,7 @@ func newReportCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			rows := scan(reg)
+			rows := report.Scan(reg)
 			if asJSON {
 				enc := json.NewEncoder(cmd.OutOrStdout())
 				enc.SetIndent("", "  ")
@@ -111,31 +129,6 @@ func newReportCmd() *cobra.Command {
 	}
 	cmd.Flags().BoolVar(&asJSON, "json", false, "saída em JSON")
 	return cmd
-}
-
-// scan runs Detect+Calculate across every registered module, turning each
-// into a report.Row. Never touches disk.
-func scan(reg *core.Registry) []report.Row {
-	var rows []report.Row
-	for _, m := range reg.All() {
-		found, err := m.Detect()
-		if err != nil || !found {
-			continue
-		}
-
-		finding, err := m.Calculate()
-		switch {
-		case err == core.ErrNotImplemented:
-			rows = append(rows, report.Row{Module: m.Name(), NotImpl: true})
-		case err != nil:
-			rows = append(rows, report.Row{Module: m.Name(), SkipReason: "erro: " + err.Error()})
-		case core.ShouldSkipSmall(finding.SizeBytes):
-			rows = append(rows, report.Row{Module: m.Name(), SkipReason: "abaixo do limiar de 200 MB"})
-		default:
-			rows = append(rows, report.Row{Module: m.Name(), SizeBytes: finding.SizeBytes})
-		}
-	}
-	return rows
 }
 
 func newCleanCmd() *cobra.Command {
@@ -163,8 +156,10 @@ func newCleanCmd() *cobra.Command {
 				}
 				targets = []core.Module{m}
 			}
-			// --deep is reserved for the v0.2 module set (docker/snap/cursor/vscode);
-			// no behavior change yet, flag exists so scripts written against it don't break later.
+			// --deep doesn't change targeting today (no --safe already means
+			// "every detected module"); kept as a distinct flag so a future,
+			// more aggressive mode (e.g. `docker system prune -a`) has
+			// somewhere to hang without breaking scripts written against it.
 			_ = deep
 
 			for _, m := range targets {
