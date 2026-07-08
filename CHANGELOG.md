@@ -4,6 +4,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Unreleased]
 
+### Adicionado — v0.3
+- `internal/audit`: log de auditoria em JSONL (`~/.local/share/devopt/history.jsonl`) — todo `Clean()` real (CLI e TUI) grava módulo, path, bytes liberados, dry-run, skip/erro. `Record`/`Read` best-effort (falha ao logar não derruba a limpeza).
+- Comando `devopt log [-n N] [--json]` — lê o histórico (default: últimas 20).
+- `audit.OverrideLogPathForTest`, usado pelos testes que exercitam `Clean()` de verdade (`internal/tui`) pra não escrever no histórico real do usuário durante `go test`.
+
 ### Adicionado — v0.2
 - Módulo `docker` (bespoke): soma `Reclaimable` de `Images`/`Containers`/`Build Cache` via `docker system df --format json`; limpa via `docker system prune -f` (nunca `--volumes`, nunca `--all`). `Local Volumes` nunca é somado nem tocado. `Safe() == false` sempre.
 - Módulo `snap` (bespoke): parseia `snap list --all` (sem suporte a JSON) pra achar revisões `disabled`, soma tamanho via `os.Stat` no squashfs de cada uma. Limpa via `snap remove --revision=<rev>` por item — uma falha não bloqueia as demais. `Safe() == false` sempre.

@@ -2,3 +2,4 @@
 /dist/
 *.test
 .claude
+/devopt-report-*.json

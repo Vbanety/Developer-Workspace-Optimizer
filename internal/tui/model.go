@@ -14,6 +14,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
+	"github.com/vinidev/devopt/internal/audit"
 	"github.com/vinidev/devopt/internal/core"
 	"github.com/vinidev/devopt/internal/report"
 )
@@ -108,6 +109,7 @@ func cleanAllCmd(targets []core.Module, dryRun bool) tea.Cmd {
 		outcomes := make([]cleanOutcome, 0, len(targets))
 		for _, mod := range targets {
 			res, err := mod.Clean(dryRun)
+			_ = audit.Record(audit.FromCleanResult(mod.Name(), res, err)) // best-effort, see internal/audit
 			outcomes = append(outcomes, cleanOutcome{module: mod.Name(), result: res, err: err})
 		}
 		return cleanAllDoneMsg{results: outcomes}

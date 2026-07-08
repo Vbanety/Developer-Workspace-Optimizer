@@ -12,6 +12,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/vinidev/devopt/internal/audit"
 	"github.com/vinidev/devopt/internal/config"
 	"github.com/vinidev/devopt/internal/core"
 	"github.com/vinidev/devopt/internal/modules/linux"
@@ -62,7 +63,7 @@ func main() {
 		},
 		SilenceUsage: true, // runtime errors here aren't a CLI-usage mistake — don't dump the flag/command list over them
 	}
-	root.AddCommand(newReportCmd(), newCleanCmd(), newVersionCmd())
+	root.AddCommand(newReportCmd(), newCleanCmd(), newVersionCmd(), newLogCmd())
 
 	if err := root.Execute(); err != nil {
 		os.Exit(1)
@@ -77,6 +78,53 @@ func newVersionCmd() *cobra.Command {
 			cmd.Println("devopt " + version)
 			return nil
 		},
+	}
+}
+
+func newLogCmd() *cobra.Command {
+	var n int
+	var asJSON bool
+	cmd := &cobra.Command{
+		Use:   "log",
+		Short: "Mostra o histórico de limpezas executadas",
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			entries, err := audit.Read(n)
+			if err != nil {
+				return err
+			}
+			if asJSON {
+				enc := json.NewEncoder(cmd.OutOrStdout())
+				enc.SetIndent("", "  ")
+				return enc.Encode(entries)
+			}
+			if len(entries) == 0 {
+				cmd.Println("(nenhuma limpeza registrada ainda)")
+				return nil
+			}
+			for _, e := range entries {
+				printLogEntry(cmd, e)
+			}
+			return nil
+		},
+	}
+	cmd.Flags().IntVarP(&n, "number", "n", 20, "quantas entradas mostrar (0 = todas)")
+	cmd.Flags().BoolVar(&asJSON, "json", false, "saída em JSON")
+	return cmd
+}
+
+func printLogEntry(cmd *cobra.Command, e audit.Entry) {
+	ts := e.Time.Format("2006-01-02 15:04:05")
+	switch {
+	case e.Error != "":
+		cmd.Printf("%s  ✗ %-12s erro: %s\n", ts, e.Module, e.Error)
+	case e.Skipped:
+		cmd.Printf("%s  … %-12s pulado (%s)\n", ts, e.Module, e.SkipReason)
+	default:
+		verb := "liberado"
+		if e.DryRun {
+			verb = "seria liberado (dry-run)"
+		}
+		cmd.Printf("%s  ✔ %-12s %s %s\n", ts, e.Module, report.HumanSize(e.FreedBytes), verb)
 	}
 }
 
@@ -207,6 +255,9 @@ func cleanOne(cmd *cobra.Command, m core.Module, safeOnly, dryRun, yes bool) err
 	}
 
 	result, err := m.Clean(dryRun)
+	if logErr := audit.Record(audit.FromCleanResult(m.Name(), result, err)); logErr != nil {
+		cmd.PrintErrf("aviso: falha ao gravar log de auditoria: %v\n", logErr)
+	}
 	if err != nil {
 		return fmt.Errorf("%s: %w", m.Name(), err)
 	}

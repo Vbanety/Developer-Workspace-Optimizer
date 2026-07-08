@@ -6,7 +6,7 @@ Não é "mais um cache cleaner": o diferencial é transparência. Antes de apaga
 
 ## Status
 
-**v0.1 e v0.2 — completos.** Linux apenas. Windows e macOS são fases futuras (ver [roadmap](.claude/contexts/roadmap.md)).
+**v0.1, v0.2 e v0.3 — completos.** Linux apenas. Windows e macOS são fases futuras (ver [roadmap](.claude/contexts/roadmap.md)).
 
 Módulos: `yarn`, `npm`, `pnpm`, `gradle`, `composer`, `playwright`, `puppeteer`, `trash`, `cursor`, `vscode` (seguros, sem confirmação extra); `apt` (path de sistema — normalmente exige `sudo` pra remover de verdade), `docker` (containers/imagens — nunca `Safe()`, sempre confirma; nunca mexe em volumes) e `snap` (revisões desabilitadas — nunca `Safe()`, remoção exige root).
 
@@ -21,6 +21,9 @@ go run ./cmd/devopt report --json       # saída em JSON
 go run ./cmd/devopt clean --dry-run     # mostra o que seria limpo
 go run ./cmd/devopt clean --module=yarn # limpa só um módulo (confirma antes)
 go run ./cmd/devopt clean --safe --yes  # só módulos seguros, sem confirmação
+
+go run ./cmd/devopt log                 # histórico das últimas 20 limpezas
+go run ./cmd/devopt log -n 0 --json     # histórico completo em JSON
 ```
 
 ## Nunca apaga

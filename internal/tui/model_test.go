@@ -1,10 +1,12 @@
 package tui
 
 import (
+	"path/filepath"
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
 
+	"github.com/vinidev/devopt/internal/audit"
 	"github.com/vinidev/devopt/internal/core"
 )
 
@@ -164,6 +166,8 @@ func TestModelConfirmNoGoesBackToMenu(t *testing.T) {
 }
 
 func TestModelConfirmYesRunsCleanAndReachesDone(t *testing.T) {
+	defer audit.OverrideLogPathForTest(filepath.Join(t.TempDir(), "history.jsonl"))()
+
 	m := afterScan(t)
 	next, _ := m.Update(key("enter")) // -> confirm (safe clean: yarn only)
 	m = next.(Model)
