@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vinidev/devopt/internal/core"
+	"github.com/Vbanety/Developer-Workspace-Optimizer/internal/core"
 )
 
 // Snap is a bespoke module — like Docker, it shells out to a CLI rather

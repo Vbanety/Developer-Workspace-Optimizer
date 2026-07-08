@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/vinidev/devopt/internal/core"
+	"github.com/Vbanety/Developer-Workspace-Optimizer/internal/core"
 )
 
 func TestMultiDirCacheDetectFindsAnyExistingSubpath(t *testing.T) {

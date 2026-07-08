@@ -10,7 +10,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/vinidev/devopt/internal/core"
+	"github.com/Vbanety/Developer-Workspace-Optimizer/internal/core"
 )
 
 var (

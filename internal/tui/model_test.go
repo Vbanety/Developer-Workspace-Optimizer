@@ -6,8 +6,8 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/vinidev/devopt/internal/audit"
-	"github.com/vinidev/devopt/internal/core"
+	"github.com/Vbanety/Developer-Workspace-Optimizer/internal/audit"
+	"github.com/Vbanety/Developer-Workspace-Optimizer/internal/core"
 )
 
 // fakeModule is a deterministic in-memory core.Module for testing the

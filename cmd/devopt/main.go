@@ -12,12 +12,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/vinidev/devopt/internal/audit"
-	"github.com/vinidev/devopt/internal/config"
-	"github.com/vinidev/devopt/internal/core"
-	"github.com/vinidev/devopt/internal/modules/linux"
-	"github.com/vinidev/devopt/internal/report"
-	"github.com/vinidev/devopt/internal/tui"
+	"github.com/Vbanety/Developer-Workspace-Optimizer/internal/audit"
+	"github.com/Vbanety/Developer-Workspace-Optimizer/internal/config"
+	"github.com/Vbanety/Developer-Workspace-Optimizer/internal/core"
+	"github.com/Vbanety/Developer-Workspace-Optimizer/internal/modules/linux"
+	"github.com/Vbanety/Developer-Workspace-Optimizer/internal/report"
+	"github.com/Vbanety/Developer-Workspace-Optimizer/internal/tui"
 )
 
 // version is set at release build time; "dev" during local builds.

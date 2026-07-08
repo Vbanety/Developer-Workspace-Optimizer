@@ -1,40 +1,58 @@
+🇧🇷 [Leia em português](README.pt-BR.md)
+
 # devopt — Developer Workspace Optimizer
 
-CLI que escaneia caches de ferramentas de desenvolvimento (npm/yarn/Docker/Gradle/IDEs/browsers/etc), mostra quanto espaço dá pra recuperar e limpa com segurança — nunca sem escanear e confirmar antes.
+A CLI that scans development-tool caches (npm/yarn/Docker/Gradle/IDEs/browsers/etc), shows how much disk space you can recover, and cleans it safely — never without scanning and confirming first.
 
-Não é "mais um cache cleaner": o diferencial é transparência. Antes de apagar qualquer coisa, mostra o que é, quanto ocupa, e por que é seguro remover.
+Not "just another cache cleaner": the whole point is transparency. Before deleting anything, it shows you what it is, how much space it takes, and why it's safe to remove.
 
 ## Status
 
-**v0.1, v0.2 e v0.3 — completos.** Linux apenas. Windows e macOS são fases futuras (ver [roadmap](.claude/contexts/roadmap.md)).
+**v0.1, v0.2, and v0.3 — complete.** Linux only for now; Windows and macOS are future phases (see [roadmap](.claude/contexts/roadmap.md)).
 
-Módulos: `yarn`, `npm`, `pnpm`, `gradle`, `composer`, `playwright`, `puppeteer`, `trash`, `cursor`, `vscode` (seguros, sem confirmação extra); `apt` (path de sistema — normalmente exige `sudo` pra remover de verdade), `docker` (containers/imagens — nunca `Safe()`, sempre confirma; nunca mexe em volumes) e `snap` (revisões desabilitadas — nunca `Safe()`, remoção exige root).
+Modules: `yarn`, `npm`, `pnpm`, `gradle`, `composer`, `playwright`, `puppeteer`, `trash`, `cursor`, `vscode` (safe, no extra confirmation needed); `apt` (system path — usually needs `sudo` to actually remove), `docker` (containers/images — never `Safe()`, always confirms; never touches volumes), and `snap` (disabled revisions — never `Safe()`, removal needs root).
 
-## Uso
+## Install
 
 ```sh
-go run ./cmd/devopt              # menu interativo (scan → limpeza segura/profunda/escolher módulos/relatório)
-
-go run ./cmd/devopt report              # só escaneia, nunca apaga nada
-go run ./cmd/devopt report --json       # saída em JSON
-
-go run ./cmd/devopt clean --dry-run     # mostra o que seria limpo
-go run ./cmd/devopt clean --module=yarn # limpa só um módulo (confirma antes)
-go run ./cmd/devopt clean --safe --yes  # só módulos seguros, sem confirmação
-
-go run ./cmd/devopt log                 # histórico das últimas 20 limpezas
-go run ./cmd/devopt log -n 0 --json     # histórico completo em JSON
+go install github.com/Vbanety/Developer-Workspace-Optimizer/cmd/devopt@latest
 ```
 
-## Nunca apaga
+Or clone and build locally:
+
+```sh
+git clone https://github.com/Vbanety/Developer-Workspace-Optimizer.git
+cd Developer-Workspace-Optimizer
+go build -o devopt ./cmd/devopt
+```
+
+Requires Go 1.24+.
+
+## Usage
+
+```sh
+devopt                       # interactive menu (scan → safe/deep clean, pick modules, write report)
+
+devopt report                # scan only, never deletes anything
+devopt report --json         # JSON output
+
+devopt clean --dry-run       # show what would be cleaned, touch nothing
+devopt clean --module=yarn   # clean a single module (confirms first)
+devopt clean --safe --yes    # only modules marked safe, no confirmation prompt
+
+devopt log                   # last 20 cleanup actions
+devopt log -n 0 --json       # full audit history as JSON
+```
+
+## Never deletes
 
 - `~/Documents`, `~/Desktop`, `.config`, `.ssh`.
-- Diretórios de projeto (detecta `.git`, `package.json`, `go.mod`, etc. na raiz).
-- Qualquer coisa fora da lista de paths de cada módulo.
+- Project directories (detects `.git`, `package.json`, `go.mod`, etc. at the root).
+- Anything outside each module's own path list.
 
-Cache menor que 200 MB é ignorado por padrão. Toda limpeza real passa por confirmação a menos que `--yes` seja passado.
+Caches smaller than 200 MB are skipped by default. Every real cleanup asks for confirmation unless `--yes` is passed.
 
-## Desenvolvimento
+## Development
 
 ```sh
 go build ./...
@@ -42,8 +60,8 @@ go vet ./...
 go test ./...
 ```
 
-Arquitetura, contrato de módulo e regras de segurança documentados em [`.claude/contexts/`](.claude/contexts/). Pra adicionar um módulo novo, veja `.claude/commands/add-module.md`.
+Architecture, the module contract, and safety rules are documented in [`.claude/contexts/`](.claude/contexts/). To add a new module, see `.claude/commands/add-module.md`.
 
-## Licença
+## License
 
-MIT — ver [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE).

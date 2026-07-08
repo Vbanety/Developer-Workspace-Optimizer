@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/vinidev/devopt/internal/core"
+	"github.com/Vbanety/Developer-Workspace-Optimizer/internal/core"
 )
 
 // Entry is one Clean() invocation, successful or not.

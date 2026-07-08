@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vinidev/devopt/internal/core"
+	"github.com/Vbanety/Developer-Workspace-Optimizer/internal/core"
 )
 
 // Docker is a bespoke module — unlike DirCache it doesn't walk a directory,

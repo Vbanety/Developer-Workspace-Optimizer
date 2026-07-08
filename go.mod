@@ -1,4 +1,4 @@
-module github.com/vinidev/devopt
+module github.com/Vbanety/Developer-Workspace-Optimizer
 
 go 1.24.0
 

@@ -14,9 +14,9 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/vinidev/devopt/internal/audit"
-	"github.com/vinidev/devopt/internal/core"
-	"github.com/vinidev/devopt/internal/report"
+	"github.com/Vbanety/Developer-Workspace-Optimizer/internal/audit"
+	"github.com/Vbanety/Developer-Workspace-Optimizer/internal/core"
+	"github.com/Vbanety/Developer-Workspace-Optimizer/internal/report"
 )
 
 type screen int
