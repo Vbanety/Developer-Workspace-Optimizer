@@ -29,6 +29,8 @@ func defaultLinux(home string) Rules {
 		"puppeteer":  filepath.Join(home, ".cache", "puppeteer"),
 		"trash":      filepath.Join(home, ".local", "share", "Trash"),
 		"apt":        "/var/cache/apt/archives",
+		"cursor":     filepath.Join(home, ".config", "Cursor"),
+		"vscode":     filepath.Join(home, ".config", "Code"),
 	}}
 }
 

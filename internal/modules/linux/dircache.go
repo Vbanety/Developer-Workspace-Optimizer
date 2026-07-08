@@ -43,27 +43,7 @@ func (c *DirCache) Detect() (bool, error) {
 }
 
 func (c *DirCache) Calculate() (core.Finding, error) {
-	var size int64
-	var items int
-	err := filepath.WalkDir(c.path, func(_ string, d fs.DirEntry, err error) error {
-		if err != nil {
-			// Unreadable subtree (e.g. root-only /var/cache/apt/archives/partial):
-			// skip it instead of failing the whole scan.
-			if d != nil && d.IsDir() {
-				return fs.SkipDir
-			}
-			return nil
-		}
-		if !d.IsDir() {
-			info, err := d.Info()
-			if err != nil {
-				return err
-			}
-			size += info.Size()
-			items++
-		}
-		return nil
-	})
+	size, items, err := dirSize(c.path)
 	if err != nil {
 		return core.Finding{}, err
 	}
@@ -93,17 +73,50 @@ func (c *DirCache) Clean(dryRun bool) (core.CleanResult, error) {
 		}, nil
 	}
 
-	entries, err := os.ReadDir(c.path)
-	if err != nil {
+	if err := emptyDir(c.path); err != nil {
 		return core.CleanResult{}, err
-	}
-	for _, entry := range entries {
-		if err := os.RemoveAll(filepath.Join(c.path, entry.Name())); err != nil {
-			return core.CleanResult{}, err
-		}
 	}
 
 	return core.CleanResult{
 		Module: c.name, Path: c.path, FreedBytes: finding.SizeBytes, DryRun: false,
 	}, nil
+}
+
+// dirSize walks path summing file sizes and counting items. Subtrees it
+// can't read (e.g. root-only /var/cache/apt/archives/partial) are skipped
+// instead of failing the whole walk. Shared by DirCache and MultiDirCache.
+func dirSize(path string) (size int64, items int, err error) {
+	err = filepath.WalkDir(path, func(_ string, d fs.DirEntry, err error) error {
+		if err != nil {
+			if d != nil && d.IsDir() {
+				return fs.SkipDir
+			}
+			return nil
+		}
+		if !d.IsDir() {
+			info, err := d.Info()
+			if err != nil {
+				return err
+			}
+			size += info.Size()
+			items++
+		}
+		return nil
+	})
+	return size, items, err
+}
+
+// emptyDir removes every direct child of path, leaving path itself in place.
+// Shared by DirCache and MultiDirCache.
+func emptyDir(path string) error {
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		if err := os.RemoveAll(filepath.Join(path, entry.Name())); err != nil {
+			return err
+		}
+	}
+	return nil
 }

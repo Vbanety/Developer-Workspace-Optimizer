@@ -79,6 +79,13 @@ func buildRegistry() (*core.Registry, error) {
 	for _, m := range linuxModules {
 		reg.Register(linux.NewDirCache(m.name, rules.Paths[m.name], m.safe))
 	}
+
+	// Bespoke modules that aren't a plain cache directory (see
+	// .claude/contexts/architecture.md for why each needs its own type).
+	reg.Register(linux.NewDocker())
+	reg.Register(linux.NewMultiDirCache("cursor", rules.Paths["cursor"], linux.ElectronCacheSubdirs, true))
+	reg.Register(linux.NewMultiDirCache("vscode", rules.Paths["vscode"], linux.ElectronCacheSubdirs, true))
+
 	return reg, nil
 }
 
